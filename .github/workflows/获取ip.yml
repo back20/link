@@ -14,10 +14,10 @@ jobs:
 
       - name: Fetch TXT and save
         run: |
-          curl -sSL https://zip.cm.edu.kg/all.txt -o link/addressesapi.txt
+          curl -sSL https://zip.cm.edu.kg/all.txt -o addressesapi.txt
 
       - name: Commit and push changes
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "Auto update addressesapi.txt daily"
-          file_pattern: "link/addressesapi.txt"
+          file_pattern: "addressesapi.txt"
