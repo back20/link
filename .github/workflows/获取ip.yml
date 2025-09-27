@@ -1,23 +1,24 @@
-name: Fetch and Copy TXT Content
+name: 获取ip
 
 on:
   schedule:
-    - cron: '0 21 * * *'  # 对应北京时间每日5时（UTC+8时差）
-  workflow_dispatch:  # 支持手动触发
+    - cron: '0 21 * * *'  # UTC时间21点 = 北京时间次日5点
+  workflow_dispatch:  # 允许手动触发
 
 jobs:
-  copy-content:
+  overwrite-txt:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Fetch TXT and save
+      - name: Fetch content and overwrite file
         run: |
+          # 抓取目标TXT并覆盖根目录的addressesapi.txt，保持原结构
           curl -sSL https://zip.cm.edu.kg/all.txt -o addressesapi.txt
 
-      - name: Commit and push changes
+      - name: Auto commit and push
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          commit_message: "Auto update addressesapi.txt daily"
+          commit_message: "Auto overwrite addressesapi.txt (daily update)"
           file_pattern: "addressesapi.txt"
