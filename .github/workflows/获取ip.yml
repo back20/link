@@ -1,4 +1,4 @@
-name: 提取JSON
+name: 获取JSON
 
 on:
   schedule:
@@ -12,8 +12,8 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          persist-credentials: false  # 清除默认凭据
-          token: ${{ secrets.GITHUB_TOKEN }}  # 令牌移至checkout步骤
+          token: ${{ secrets.GITHUB_TOKEN }}  # 用内置令牌获取推送权限
+          fetch-depth: 0  # 拉取完整历史，避免分支关联问题
 
       - name: Extract IP:Port via jq (with error handling)
         run: |
@@ -27,4 +27,4 @@ jobs:
         with:
           commit_message: "Auto extract IP:Port for AMS/KIX/NRT/HKG"
           file_pattern: "addressesapi.txt"
-          # 移除不支持的token参数，依赖checkout步骤的令牌权限
+          push_options: "--set-upstream origin main"  # 显式关联推送分支
