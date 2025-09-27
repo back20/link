@@ -12,19 +12,22 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}  # 用内置令牌获取推送权限
-          fetch-depth: 0  # 拉取完整历史，避免分支关联问题
+          token: ${{ secrets.GITHUB_TOKEN }}
+          ref: main  # 显式指定拉取main分支
+          fetch-depth: 0  # 拉取全部分支历史
 
-      - name: Extract IP:Port via jq (with error handling)
+      - name: Extract IP:Port via jq
         run: |
           curl -sSL https://zip.cm.edu.kg/all.json | jq -r '
             .[] | select(type == "object" and (.iata == "AMS" or .iata == "KIX" or .iata == "NRT" or .iata == "HKG")) | 
             .ips[] | "\(.ip):\(.port)#\(.city)"
           ' > addressesapi.txt
 
-      - name: Commit and push changes
-        uses: stefanzweifel/git-auto-commit-action@v5
-        with:
-          commit_message: "Auto extract IP:Port for AMS/KIX/NRT/HKG"
-          file_pattern: "addressesapi.txt"
-          push_options: "--set-upstream origin main"  # 显式关联推送分支
+      - name: Set git config and push
+        # 替换auto-commit-action，直接用git命令避免分支关联问题
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add addressesapi.txt
+          git commit -m "Auto extract IP:Port for AMS/KIX/NRT/HKG" || echo "No changes to commit"
+          git push origin main  # 直接推送到main分支
