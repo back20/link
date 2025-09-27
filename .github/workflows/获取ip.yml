@@ -1,24 +1,31 @@
-name: 获取ip
+name: 抓取JSON
 
 on:
   schedule:
-    - cron: '0 21 * * *'  # UTC时间21点 = 北京时间次日5点
-  workflow_dispatch:  # 允许手动触发
+    - cron: '0 21 * * *'  # UTC 21点 = 北京时间次日5点
+  workflow_dispatch:  # 支持手动触发
 
 jobs:
-  overwrite-txt:
+  extract-and-save:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false  # 避免默认凭据冲突
 
-      - name: Fetch content and overwrite file
+      - name: Extract IP:Port via jq
         run: |
-          # 抓取目标TXT并覆盖根目录的addressesapi.txt，保持原结构
-          curl -sSL https://zip.cm.edu.kg/all.txt -o addressesapi.txt
+          # 安装jq处理JSON，抓取目标文件并筛选数据
+          sudo apt-get update && sudo apt-get install -y jq
+          curl -sSL https://zip.cm.edu.kg/all.json | jq -r '
+            .[] | select(.iata == "AMS" or .iata == "KIX" or .iata == "NRT" or .iata == "HKG") | 
+            .ips[] | "\(.ip):\(.port)#\(.city)"
+          ' > addressesapi.txt  # 覆盖根目录文件
 
-      - name: Auto commit and push
+      - name: Commit and push changes
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          commit_message: "Auto overwrite addressesapi.txt (daily update)"
+          commit_message: "Auto extract IP:Port for AMS/KIX/NRT/HKG"
           file_pattern: "addressesapi.txt"
+          token: ${{ secrets.GITHUB_TOKEN }}  # 调用内置令牌
