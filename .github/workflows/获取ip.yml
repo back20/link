@@ -1,0 +1,23 @@
+name: Fetch and Copy TXT Content
+
+on:
+  schedule:
+    - cron: '0 21 * * *'  # 对应北京时间每日5时（UTC+8时差）
+  workflow_dispatch:  # 支持手动触发
+
+jobs:
+  copy-content:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Fetch TXT and save
+        run: |
+          curl -sSL https://zip.cm.edu.kg/all.txt -o link/addressesapi.txt
+
+      - name: Commit and push changes
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "Auto update addressesapi.txt daily"
+          file_pattern: "link/addressesapi.txt"
