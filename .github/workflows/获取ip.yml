@@ -12,20 +12,19 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          persist-credentials: false  # 避免默认凭据冲突
+          persist-credentials: false
 
-      - name: Extract IP:Port via jq
+      - name: Extract IP:Port via jq (with error handling)
         run: |
-          # 安装jq处理JSON，抓取目标文件并筛选数据
-          sudo apt-get update && sudo apt-get install -y jq
           curl -sSL https://zip.cm.edu.kg/all.json | jq -r '
-            .[] | select(.iata == "AMS" or .iata == "KIX" or .iata == "NRT" or .iata == "HKG") | 
+            # 先过滤出对象类型的条目，再匹配iata，避免字符串条目报错
+            .[] | select(type == "object" and (.iata == "AMS" or .iata == "KIX" or .iata == "NRT" or .iata == "HKG")) | 
             .ips[] | "\(.ip):\(.port)#\(.city)"
-          ' > addressesapi.txt  # 覆盖根目录文件
+          ' > addressesapi.txt
 
       - name: Commit and push changes
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "Auto extract IP:Port for AMS/KIX/NRT/HKG"
           file_pattern: "addressesapi.txt"
-          token: ${{ secrets.GITHUB_TOKEN }}  # 调用内置令牌
+          token: ${{ secrets.GITHUB_TOKEN }}
