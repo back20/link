@@ -3,7 +3,7 @@ name: 获取JSON
 on:
   schedule:
     - cron: '0 21 * * *'  # UTC 21点 = 北京时间次日5点
-  workflow_dispatch:  # 支持手动触发
+  workflow_dispatch:
 
 jobs:
   extract-and-save:
@@ -13,21 +13,21 @@ jobs:
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          ref: main  # 显式指定拉取main分支
-          fetch-depth: 0  # 拉取全部分支历史
+          ref: main
+          fetch-depth: 0
 
-      - name: Extract IP:Port via jq
+      - name: Extract IP:Port (fix JSON path)
         run: |
           curl -sSL https://zip.cm.edu.kg/all.json | jq -r '
-            .[] | select(type == "object" and (.iata == "AMS" or .iata == "KIX" or .iata == "NRT" or .iata == "HKG")) | 
-            .ips[] | "\(.ip):\(.port)#\(.city)"
+            # 目标数组是.data，iata/city在.locations下，port是数组需取第一个元素
+            .data[] | select(type == "object" and .locations.iata in ["AMS", "KIX", "NRT", "HKG"]) | 
+            "\(.ip):\(.port[0])#\(.locations.city)"
           ' > addressesapi.txt
 
-      - name: Set git config and push
-        # 替换auto-commit-action，直接用git命令避免分支关联问题
+      - name: Commit and push
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add addressesapi.txt
-          git commit -m "Auto extract IP:Port for AMS/KIX/NRT/HKG" || echo "No changes to commit"
-          git push origin main  # 直接推送到main分支
+          git commit -m "Auto extract IP:Port for AMS/KIX/NRT/HKG" || echo "No changes"
+          git push origin main
