@@ -1,4 +1,4 @@
-name: 抓取JSON
+name: 提取JSON
 
 on:
   schedule:
@@ -12,12 +12,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          persist-credentials: false
+          persist-credentials: false  # 清除默认凭据
+          token: ${{ secrets.GITHUB_TOKEN }}  # 令牌移至checkout步骤
 
       - name: Extract IP:Port via jq (with error handling)
         run: |
           curl -sSL https://zip.cm.edu.kg/all.json | jq -r '
-            # 先过滤出对象类型的条目，再匹配iata，避免字符串条目报错
             .[] | select(type == "object" and (.iata == "AMS" or .iata == "KIX" or .iata == "NRT" or .iata == "HKG")) | 
             .ips[] | "\(.ip):\(.port)#\(.city)"
           ' > addressesapi.txt
@@ -27,4 +27,4 @@ jobs:
         with:
           commit_message: "Auto extract IP:Port for AMS/KIX/NRT/HKG"
           file_pattern: "addressesapi.txt"
-          token: ${{ secrets.GITHUB_TOKEN }}
+          # 移除不支持的token参数，依赖checkout步骤的令牌权限
