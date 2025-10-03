@@ -19,7 +19,7 @@ jobs:
       - name: Extract IP:Port (fix shell syntax)
         run: |
           # 单引号内不换行，或用反斜杠转义，避免shell截断命令
-          curl -sSL https://zip.cm.edu.kg/all.json | jq -r '.data[] | select(type == "object" and .locations.iata == "AMS" or .locations.iata == "KIX" or .locations.iata == "NRT" or .locations.iata == "HKG") | "\(.ip):\(.port[0])#\(.locations.city)"' > addressesapi.txt
+          curl -sSL https://zip.cm.edu.kg/all.json | jq -r '.data[] | select(type == "object" and .locations.iata == "SJC" or .locations.iata == "KIX" or .locations.iata == "NRT" or .locations.iata == "HKG") | "\(.ip):\(.port[0])#\(.locations.city)"' > addressesapi.txt
 
       - name: Commit and push
         run: |
